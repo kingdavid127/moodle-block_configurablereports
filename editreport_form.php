@@ -100,6 +100,21 @@ class report_edit_form extends moodleform {
         $mform->addElement('checkbox', 'displaytotalrecords', get_string('displaytotalrecords', 'block_configurable_reports'), get_string('displaytotalrecordsdescription', 'block_configurable_reports'));
         $mform->addElement('checkbox', 'displayprintbutton', get_string('displayprintbutton', 'block_configurable_reports'), get_string('displayprintbuttondescription', 'block_configurable_reports'));
 
+        $mform->addElement(
+            'checkbox',
+            'converttime',
+            get_string('converttime', 'block_configurable_reports'),
+            get_string('converttimedescription', 'block_configurable_reports')
+        );
+        $mform->addHelpButton('converttime', 'converttime', 'block_configurable_reports');
+        $mform->setDefault('converttime', 0);
+        $mform->disabledIf('converttime', 'type', 'neq', 'sql');
+        $mform->addElement('text', 'timeformat', get_string('timeformat', 'block_configurable_reports'), ['size' => 30]);
+        $mform->setType('timeformat', PARAM_TEXT);
+        $mform->setDefault('timeformat', '%m/%d/%Y');
+        $mform->addHelpButton('timeformat', 'timeformat', 'block_configurable_reports');
+        $mform->disabledIf('timeformat', 'converttime', 'notchecked');
+
         $mform->addElement('checkbox', 'cron', get_string('cron', 'block_configurable_reports'), get_string('crondescription', 'block_configurable_reports'));
         $mform->addHelpButton('cron', 'cron', 'block_configurable_reports');
         $mform->setDefault('cron', 0);
@@ -139,6 +154,42 @@ class report_edit_form extends moodleform {
             $mform->addElement('checkbox', 'export_' . $key, null, $val);
         }
 
+        $mform->addElement(
+            'textarea',
+            'fixedwidthpattern',
+            get_string('fixedwidthpattern', 'block_configurable_reports'),
+            ['rows' => 8, 'cols' => 60]
+        );
+        $mform->setType('fixedwidthpattern', PARAM_RAW);
+        $mform->addHelpButton('fixedwidthpattern', 'fixedwidthpattern', 'block_configurable_reports');
+        $mform->hideIf('fixedwidthpattern', 'export_fixedwidth', 'notchecked');
+
+        $mform->addElement('header', 'scheduleoptions', get_string('scheduleoptions', 'block_configurable_reports'));
+
+        $mform->addElement(
+            'advcheckbox',
+            'enableschedule',
+            get_string('enableschedule', 'block_configurable_reports'),
+            get_string('enableschedule_desc', 'block_configurable_reports')
+        );
+        $mform->addHelpButton('enableschedule', 'enableschedule', 'block_configurable_reports');
+        $mform->setDefault('enableschedule', 0);
+
+        $frequencygroup = [
+            $mform->createElement('select', 'frequency', null, \block_configurable_reports\local\schedule::frequency_options()),
+            $mform->createElement('static', 'runatlabel', null, get_string('at', 'block_configurable_reports')),
+            $mform->createElement('select', 'runat', null, \block_configurable_reports\local\schedule::hour_options()),
+        ];
+        $mform->addGroup($frequencygroup, 'frequencygroup', get_string('frequency', 'block_configurable_reports'), ' ', false);
+        $mform->setDefault('frequency', 'daily');
+        $mform->setDefault('runat', 0);
+        $mform->disabledIf('frequencygroup', 'enableschedule', 'notchecked');
+
+        $mform->addElement('text', 'emailto', get_string('emailto', 'block_configurable_reports'), ['size' => 70]);
+        $mform->setType('emailto', PARAM_TEXT);
+        $mform->addHelpButton('emailto', 'emailto', 'block_configurable_reports');
+        $mform->disabledIf('emailto', 'enableschedule', 'notchecked');
+
         if (isset($this->_customdata['report']->id) && $this->_customdata['report']->id) {
             $mform->addElement('hidden', 'id', $this->_customdata['report']->id);
             $mform->setType('id', PARAM_INT);
@@ -164,6 +215,42 @@ class report_edit_form extends moodleform {
 
         // Buttons.
         $this->add_action_buttons(true, $submitstring);
+    }
+
+    /**
+     * The fixed width export needs a well formed JSON pattern to lay the file out.
+     *
+     * @param array $data
+     * @param array $files
+     * @return array
+     */
+    public function validation($data, $files): array {
+        $errors = parent::validation($data, $files);
+
+        if (!empty($data['export_fixedwidth'])) {
+            if (trim($data['fixedwidthpattern'] ?? '') === '') {
+                $errors['fixedwidthpattern'] = get_string('required');
+            } else {
+                $pattern = json_decode($data['fixedwidthpattern']);
+                if (json_last_error() !== JSON_ERROR_NONE || !is_array($pattern)) {
+                    $errors['fixedwidthpattern'] = get_string('invalidjson', 'block_configurable_reports');
+                }
+            }
+        }
+
+        if (!empty($data['enableschedule'])) {
+            $emails = preg_split('/[\s,;]+/', trim($data['emailto'] ?? ''), -1, PREG_SPLIT_NO_EMPTY);
+            if (!$emails) {
+                $errors['emailto'] = get_string('required');
+            } else {
+                $invalid = array_filter($emails, fn($email) => !validate_email($email));
+                if ($invalid) {
+                    $errors['emailto'] = get_string('invalidemails', 'block_configurable_reports', implode(', ', $invalid));
+                }
+            }
+        }
+
+        return $errors;
     }
 
     /**

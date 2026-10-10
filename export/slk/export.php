@@ -15,91 +15,23 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Configurable Reports
- * A Moodle block for creating customizable reports
- * @package blocks
- * @author: Juan leyva <http://www.twitter.com/jleyvadelgado>
- * @date: 2009
+ * Configurable Reports slk export download entry point.
+ *
+ * The exporter itself is \block_configurable_reports\export\slk, shared with the
+ * scheduled email task.
+ *
+ * @package    block_configurable_reports
+ * @author     David Saylor
+ * @copyright  2026 Dragonfly EdTech
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-function export_report($report)
-{
-    $filename = $report->name ?? 'report';
-    $table = $report->table;
-
-    set_header($filename);
-
-    echo "ID;P\n";
-
-    if (!empty($table->head)) {
-        $head = [];
-
-        foreach ($table->head as $title) {
-            $head[] = $title;
-        }
-
-        dump_slk_row($head);
-    }
-
-    foreach ($table->data as $row) {
-        dump_slk_row($row);
-    }
-
-    echo "E\n";
-
-    exit;
-}
-
-function set_header($filename)
-{
-    global $CFG;
-
-    require_once("$CFG->libdir/moodlelib.php");
-
-    $gmdate = gmdate("Ymd_Hi");
-    $filename = clean_filename("$filename-$gmdate.slk");
-
-    if (strpos($CFG->wwwroot, 'https://') === 0) { // HTTPS sites - watch out for IE! KB812935 and KB316431.
-        header('Cache-Control: max-age=10');
-        header('Pragma: ');
-    } else { //normal http - prevent caching at all cost
-        header('Cache-Control: private, must-revalidate, pre-check=0, post-check=0, max-age=0');
-        header('Pragma: no-cache');
-    }
-    header('Expires: ' . gmdate('D, d M Y H:i:s', 0) . ' GMT');
-    header("Content-Type: application/download; charset=iso-8859-1");
-    header("Content-Disposition: attachment; filename=\"$filename\"");
-}
-
-$row = 1;
-
-function dump_slk_row($data)
-{
-    // Refer to https://en.wikipedia.org/wiki/Symbolic_Link_(SYLK)
-
-    global $row;
-    $col = 1;
-
-    foreach ($data as $datum) {
-        $datum =
-            htmlspecialchars_decode(
-                strip_tags(
-                    nl2br(
-                        str_replace('"', "'", $datum)
-                    )
-                )
-            );
-
-        if (preg_match('!!u', $datum)) {
-            // https://stackoverflow.com/questions/4407854/how-do-i-detect-if-have-to-apply-utf-8-decode-or-encode-on-a-string
-
-            $datum = iconv("UTF-8", "ISO-8859-1//TRANSLIT", $datum);
-        }
-
-        echo "C;Y$row;X$col;K\"$datum\"\n";
-
-        ++$col;
-    }
-
-    ++$row;
+/**
+ * Send the report to the browser in this format.
+ *
+ * @param object $report The final report object.
+ * @return void
+ */
+function export_report($report) {
+    (new \block_configurable_reports\export\slk($report))->download();
 }

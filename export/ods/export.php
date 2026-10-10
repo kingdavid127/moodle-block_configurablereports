@@ -15,57 +15,23 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Configurable Reports a Moodle block for creating customizable reports
+ * Configurable Reports ods export download entry point.
  *
- * @copyright  2020 Juan Leyva <juan@moodle.com>
+ * The exporter itself is \block_configurable_reports\export\ods, shared with the
+ * scheduled email task.
+ *
  * @package    block_configurable_reports
- * @author     Juan leyva <http://www.twitter.com/jleyvadelgado>
+ * @author     David Saylor
+ * @copyright  2026 Dragonfly EdTech
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 /**
- * Export report
+ * Send the report to the browser in this format.
  *
- * @param object $report
+ * @param object $report The final report object.
  * @return void
  */
 function export_report($report) {
-    global $CFG;
-    require_once($CFG->dirroot . '/lib/odslib.class.php');
-
-    $table = $report->table;
-    $matrix = [];
-    $reportname = format_string($report->name) ?? 'report';
-    $filename = $reportname . (time()) . '.ods';
-
-    if (!empty($table->head)) {
-        foreach ($table->head as $key => $heading) {
-            $matrix[0][$key] = str_replace("\n", ' ', htmlspecialchars_decode(strip_tags(nl2br(format_string($heading)))));
-        }
-    }
-
-    if (!empty($table->data)) {
-        foreach ($table->data as $rkey => $row) {
-            foreach ($row as $key => $item) {
-                $matrix[$rkey + 1][$key] = str_replace("\n", ' ', htmlspecialchars_decode(strip_tags(nl2br(format_string($item)))));
-            }
-        }
-    }
-
-    $downloadfilename = clean_filename($filename);
-    // Creating a workbook.
-    $workbook = new MoodleODSWorkbook("-");
-    // Sending HTTP headers.
-    $workbook->send($downloadfilename);
-    // Adding the worksheet.
-    $myxls = $workbook->add_worksheet($filename);
-
-    foreach ($matrix as $ri => $col) {
-        foreach ($col as $ci => $cv) {
-            $myxls->write_string($ri, $ci, $cv);
-        }
-    }
-
-    $workbook->close();
-    exit;
+    (new \block_configurable_reports\export\ods($report))->download();
 }

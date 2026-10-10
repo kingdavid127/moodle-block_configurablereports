@@ -164,5 +164,51 @@ function xmldb_block_configurable_reports_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2024051300, 'block', 'configurable_reports');
     }
 
+    if ($oldversion < 2027050402) {
+        // Fixed width text export: per-report JSON line layout.
+        $table = new xmldb_table('block_configurable_reports');
+        $field = new xmldb_field('fixedwidthpattern', XMLDB_TYPE_TEXT, null, null, null, null, null, 'displayprintbutton');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+        upgrade_plugin_savepoint(true, 2027050402, 'block', 'configurable_reports');
+    }
+
+    if ($oldversion < 2027050403) {
+        // Timestamp conversion for SQL reports: columns named like time/date are shown
+        // as dates in the viewer's timezone using a per-report strftime format.
+        $table = new xmldb_table('block_configurable_reports');
+        $field = new xmldb_field('converttime', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, '0', 'fixedwidthpattern');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+        $field = new xmldb_field('timeformat', XMLDB_TYPE_CHAR, '25', null, null, null, null, 'converttime');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        } else {
+            // Sites coming from the bay fork have this column NOT NULL without a default.
+            $dbman->change_field_notnull($table, $field);
+        }
+        upgrade_plugin_savepoint(true, 2027050403, 'block', 'configurable_reports');
+    }
+
+    if ($oldversion < 2027050404) {
+        // Scheduled email exports.
+        $table = new xmldb_table('block_configurable_reports');
+        $fields = [
+            new xmldb_field('enableschedule', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, '0', 'timeformat'),
+            new xmldb_field('emailto', XMLDB_TYPE_CHAR, '255', null, null, null, null, 'enableschedule'),
+            new xmldb_field('frequency', XMLDB_TYPE_CHAR, '32', null, XMLDB_NOTNULL, null, 'daily', 'emailto'),
+            new xmldb_field('runat', XMLDB_TYPE_INTEGER, '2', null, XMLDB_NOTNULL, null, '0', 'frequency'),
+            new xmldb_field('lastrun', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0', 'runat'),
+        ];
+        foreach ($fields as $field) {
+            if (!$dbman->field_exists($table, $field)) {
+                $dbman->add_field($table, $field);
+            }
+        }
+        upgrade_plugin_savepoint(true, 2027050404, 'block', 'configurable_reports');
+    }
+
     return true;
 }

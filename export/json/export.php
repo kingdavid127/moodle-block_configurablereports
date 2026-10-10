@@ -15,38 +15,23 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Configurable Reports a Moodle block for creating customizable reports
+ * Configurable Reports json export download entry point.
  *
- * @copyright  2020 Juan Leyva <juan@moodle.com>
- * @author     Juan leyva <http://www.twitter.com/jleyvadelgado>
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * The exporter itself is \block_configurable_reports\export\json, shared with the
+ * scheduled email task.
+ *
  * @package    block_configurable_reports
+ * @author     David Saylor
+ * @copyright  2026 Dragonfly EdTech
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 /**
- * Export report
+ * Send the report to the browser in this format.
  *
- * @param object $report
+ * @param object $report The final report object.
  * @return void
  */
 function export_report($report) {
-    $table = $report->table;
-
-    $reportname = format_string($report->name) ?? 'report';
-    $filename = $reportname . '_' . (time()) . '.json';
-    $json = [];
-    $headers = $table->head;
-    foreach ($table->data as $data) {
-        $jsonobject = [];
-        foreach ($data as $index => $value) {
-            $jsonobject[$headers[$index]] = format_string($value);
-        }
-        $json[] = $jsonobject;
-    }
-
-    $downloadfilename = clean_filename($filename);
-    header('Content-disposition: attachment; filename=' . $downloadfilename);
-    header('Content-type: application/json');
-    echo json_encode($json);
-    exit;
+    (new \block_configurable_reports\export\json($report))->download();
 }

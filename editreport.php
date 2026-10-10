@@ -223,6 +223,25 @@ if ($editform->is_cancelled()) {
         $data->displayprintbutton = 0;
     }
 
+    if (!isset($data->converttime)) {
+        $data->converttime = 0;
+    }
+
+    // A disabled timeformat field is not submitted; the column is NOT NULL.
+    if (!isset($data->timeformat)) {
+        $data->timeformat = '';
+    }
+
+    // Schedule fields are disabled (so not submitted) while the schedule is off.
+    $data->enableschedule = empty($data->enableschedule) ? 0 : 1;
+    if (empty($data->frequency) || !in_array($data->frequency, \block_configurable_reports\local\schedule::FREQUENCIES, true)) {
+        $data->frequency = 'daily';
+    }
+    $data->runat = isset($data->runat) ? max(0, min(23, (int) $data->runat)) : 0;
+    if (!isset($data->emailto)) {
+        $data->emailto = '';
+    }
+
     if (empty($report)) {
         $data->ownerid = $USER->id;
         $data->courseid = $courseid;

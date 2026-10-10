@@ -75,18 +75,25 @@ abstract class plugin_base {
     public bool $ordering;
 
     /**
+     * @var object|null The user the report is being built for (timezone, preferences).
+     */
+    public ?object $user = null;
+
+    /**
      * __construct
      *
      * @param int|object $report
+     * @param object|null $user The user the report runs as; defaults to the current user.
      */
-    public function __construct($report) {
-        global $DB;
+    public function __construct($report, ?object $user = null) {
+        global $DB, $USER;
 
         if (is_numeric($report)) {
             $this->report = $DB->get_record('block_configurable_reports', ['id' => $report]);
         } else {
             $this->report = $report;
         }
+        $this->user = $user ?? $USER;
         $this->init();
     }
 

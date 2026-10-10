@@ -73,6 +73,42 @@ $string['export_ods'] = "Export in ODS format";
 $string['export_slk'] = "Export in SYLK format";
 $string['export_xls'] = "Export in XLS format";
 $string['export_json'] = "Export in JSON format";
+$string['export_fixedwidth'] = "Export in fixed width TXT format";
+$string['fixedwidthpattern'] = "Fixed width TXT pattern";
+$string['fixedwidthpattern_help'] = 'A JSON array describing the lines of the text file. Each entry has a "pattern" made of "name,width" fields separated by "|". A name matching a report column heading (case insensitive, underscores read as spaces) writes that cell; any other name is written literally. Numbers are left padded with zeros, text is right padded with spaces, and values longer than their width are cut off.
+
+An entry with an "index" column writes one line per report row and may carry "children" entries rendered beneath each parent line. Use %%count%% in a child pattern for a running counter within its parent, and %%rowcount%% in a plain line for the number of lines written so far including that line.
+
+Example:
+<pre>[
+  {"pattern": "HDR,3|Payroll export,20"},
+  {"index": "userid", "pattern": "DTL,3|userid,8|lastname,20|firstname,15"},
+  {"pattern": "TRL,3|%%rowcount%%,6"}
+]</pre>';
+$string['invalidjson'] = "The pattern must be a valid JSON array";
+$string['converttime'] = "Convert timestamps";
+$string['converttimedescription'] = "Show timestamp columns as dates in the viewer's timezone";
+$string['converttime_help'] = "For SQL reports, every column whose name contains \"time\" or \"date\" is treated as a Unix timestamp and formatted as a date in the timezone of the user viewing the report. Non-numeric values in those columns are left as they are.";
+$string['timeformat'] = "Time format";
+$string['timeformat_help'] = "The strftime format used for converted timestamps, for example %m/%d/%Y or %d %B %Y, %H:%M. Leave empty for the site default date and time format. Day numbers keep their leading zero.";
+$string['scheduleoptions'] = "Schedule options";
+$string['enableschedule'] = "Enable schedule";
+$string['enableschedule_desc'] = "Email the selected export formats on a schedule";
+$string['enableschedule_help'] = "When enabled, the scheduled task builds this report once per period and emails every export format ticked above, zipped, to each recipient. The report is run as the recipient, so their timezone and permissions apply. Reports with no records send a notice instead of an attachment.";
+$string['frequency'] = "Frequency";
+$string['at'] = "at";
+$string['automaticallydaily'] = "Every day";
+$string['automaticallyweekly'] = "Every week, on the first day of the week";
+$string['automaticallymonthly'] = "Every month, on the first day of the month";
+$string['automaticallyquarterly'] = "Every quarter, on the first day of the quarter";
+$string['emailto'] = "Email to";
+$string['emailto_help'] = "Recipient email addresses separated by commas, semicolons or spaces. Each address must belong to an active user account on this site; addresses without an account are skipped and noted in the task log.";
+$string['invalidemails'] = "These are not valid email addresses: {\$a}";
+$string['crontask'] = "Email scheduled reports";
+$string['emailsubject'] = "Scheduled report: {\$a}";
+$string['datareturned'] = "The scheduled report \"{\$a}\" has run. Its exports are attached. View it online at";
+$string['nodatareturned'] = "The scheduled report \"{\$a}\" has run but returned no records. View it online at";
+$string['emailsentfailed'] = "Failed to send the scheduled report email to {\$a}";
 $string['viewreport'] = "View report";
 $string['norecordsfound'] = "No records found";
 $string['jsordering'] = 'JavaScript Ordering';

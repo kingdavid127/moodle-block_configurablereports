@@ -81,19 +81,25 @@ class plugin_startendtime extends filter_base {
             return [$sql, []];
         }
 
+        // Interpret the entered dates in the timezone of the user the report runs as.
+        $timezone = core_date::get_user_timezone($this->user);
         $filterstarttime = make_timestamp(
             $filterstarttime['year'],
             $filterstarttime['month'],
             $filterstarttime['day'],
             $filterstarttime['hour'],
-            $filterstarttime['minute']
+            $filterstarttime['minute'],
+            0,
+            $timezone
         );
         $filterendtime = make_timestamp(
             $filterendtime['year'],
             $filterendtime['month'],
             $filterendtime['day'],
             $filterendtime['hour'],
-            $filterendtime['minute']
+            $filterendtime['minute'],
+            0,
+            $timezone
         );
 
         $operators = ['<', '>', '<=', '>='];

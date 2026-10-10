@@ -24,6 +24,14 @@
         <FIELD NAME="remote" TYPE="int" LENGTH="1" NOTNULL="false" DEFAULT="0" SEQUENCE="false"/>
         <FIELD NAME="displaytotalrecords" TYPE="int" LENGTH="1" NOTNULL="false" DEFAULT="1" SEQUENCE="false"/>
         <FIELD NAME="displayprintbutton" TYPE="int" LENGTH="1" NOTNULL="false" DEFAULT="1" SEQUENCE="false"/>
+        <FIELD NAME="fixedwidthpattern" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="JSON line layout used by the fixed width text export"/>
+        <FIELD NAME="converttime" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="Format SQL columns named like time or date as dates in the viewer's timezone"/>
+        <FIELD NAME="timeformat" TYPE="char" LENGTH="25" NOTNULL="false" SEQUENCE="false" COMMENT="strftime format used when converttime is on; empty means the site default"/>
+        <FIELD NAME="enableschedule" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="Email the exports on a schedule"/>
+        <FIELD NAME="emailto" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false" COMMENT="Recipient email addresses, comma separated; each must belong to a user account"/>
+        <FIELD NAME="frequency" TYPE="char" LENGTH="32" NOTNULL="true" DEFAULT="daily" SEQUENCE="false" COMMENT="daily, weekly, monthly or quarterly"/>
+        <FIELD NAME="runat" TYPE="int" LENGTH="2" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="Hour of day (0-23) the scheduled run becomes due"/>
+        <FIELD NAME="lastrun" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="Time of the last scheduled run"/>
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>

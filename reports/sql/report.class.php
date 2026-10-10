@@ -93,7 +93,7 @@ class report_sql extends report_base {
                 require_once($CFG->dirroot . '/blocks/configurable_reports/components/filters/' . $f['pluginname'] .
                     '/plugin.class.php');
                 $classname = 'plugin_' . $f['pluginname'];
-                $class = new $classname($this->config);
+                $class = new $classname($this->config, $this->currentuser);
                 [$filtersql, $filterparams] = $class->execute_for_sql_report($sql, $f['formdata']);
                 $sql = $filtersql;
                 $params = array_merge($params, $filterparams);
@@ -186,6 +186,22 @@ class report_sql extends report_base {
      *
      * @return bool
      */
+    /**
+     * Whether a result column should be treated as a Unix timestamp when converttime is on.
+     *
+     * @param string $colname
+     * @return bool
+     */
+    protected function is_time_column(string $colname): bool {
+        $name = strtolower($colname);
+        return str_contains($name, 'time') || str_contains($name, 'date');
+    }
+
+    /**
+     * create_report
+     *
+     * @return bool
+     */
     public function create_report(): bool {
         $components = cr_unserialize($this->config->components);
 
@@ -203,15 +219,24 @@ class report_sql extends report_base {
         if (isset($config->querysql)) {
             [$sql, $params] = $this->prepare_sql($config->querysql);
 
+            $converttime = !empty($this->config->converttime);
+            $timezone = core_date::get_user_timezone($this->currentuser);
+            $timecolumns = [];
+
             if ($rs = $this->execute_query($sql, $params)) {
                 foreach ($rs as $row) {
                     if (empty($finaltable)) {
                         foreach ($row as $colname => $value) {
                             $tablehead[] = $colname;
+                            $timecolumns[] = $converttime && $this->is_time_column($colname);
                         }
                     }
                     $arrayrow = array_values((array) $row);
                     foreach ($arrayrow as $ii => $cell) {
+                        if ($timecolumns[$ii] && is_numeric($cell)) {
+                            // Keep leading zeros on the day (fixday=false) so widths stay stable.
+                            $cell = userdate((int) $cell, (string) $this->config->timeformat, $timezone, false);
+                        }
                         if (!$this->is_forexport()) {
                             $cell = format_text($cell, FORMAT_HTML, ['trusted' => true, 'noclean' => true, 'para' => false]);
                         }
@@ -245,6 +270,7 @@ class report_sql extends report_base {
         $this->finalreport->name = $this->config->name;
         $this->finalreport->table = $table;
         $this->finalreport->calcs = $calcs;
+        $this->finalreport->fixedwidthpattern = $this->config->fixedwidthpattern ?? '';
 
         return true;
     }

@@ -100,9 +100,10 @@ abstract class report_base {
      * reports_base
      *
      * @param object|int $report
+     * @param object|null $user The user the report runs as; defaults to the current user.
      * @return void
      */
-    public function reports_base($report): void {
+    public function reports_base($report, ?object $user = null): void {
         global $DB, $CFG, $USER, $remotedb;
 
         if (is_numeric($report)) {
@@ -111,7 +112,7 @@ abstract class report_base {
             $this->config = $report;
         }
 
-        $this->currentuser = $USER;
+        $this->currentuser = $user ?? $USER;
         $this->currentcourseid = $this->config->courseid;
         $this->init();
 
@@ -137,9 +138,10 @@ abstract class report_base {
      * __construct
      *
      * @param object|int $report
+     * @param object|null $user The user the report runs as; defaults to the current user.
      */
-    public function __construct($report) {
-        $this->reports_base($report);
+    public function __construct($report, ?object $user = null) {
+        $this->reports_base($report, $user);
     }
 
     /**
@@ -728,6 +730,7 @@ abstract class report_base {
         $this->finalreport->name = $this->config->name;
         $this->finalreport->table = $table;
         $this->finalreport->calcs = $calcs;
+        $this->finalreport->fixedwidthpattern = $this->config->fixedwidthpattern ?? '';
 
         return true;
 
